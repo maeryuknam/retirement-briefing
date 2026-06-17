@@ -410,6 +410,60 @@
     line-height:1.7;
   }
 
+  /* ---------- Config bar ---------- */
+  .config-bar{
+    background:var(--ink);
+    border-bottom:2px solid var(--brass);
+    position:sticky;top:0;z-index:200;
+  }
+  .config-inner{
+    max-width:920px;margin:0 auto;padding:14px 24px;
+    display:flex;align-items:center;gap:14px 20px;flex-wrap:wrap;
+  }
+  .config-eyebrow{
+    font-size:11px;letter-spacing:.28em;text-transform:uppercase;
+    color:var(--brass);font-weight:700;white-space:nowrap;
+  }
+  .config-fields{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;}
+  .config-field{display:flex;align-items:center;gap:6px;}
+  .config-flabel{font-size:12px;color:#9fb0bf;font-weight:700;white-space:nowrap;}
+  .config-input{
+    background:rgba(255,255,255,.09);
+    border:1px solid rgba(176,138,71,.38);
+    border-radius:2px;
+    color:#fff;
+    font-family:'Noto Sans KR',system-ui,sans-serif;
+    font-size:15px;font-weight:700;
+    padding:6px 10px;
+    width:88px;text-align:right;
+    outline:none;
+    transition:border-color .15s,background .15s;
+    -moz-appearance:textfield;
+  }
+  .config-input::-webkit-inner-spin-button,.config-input::-webkit-outer-spin-button{-webkit-appearance:none;}
+  .config-input:focus{border-color:var(--brass);background:rgba(255,255,255,.14);}
+  .config-unit{font-size:12.5px;color:#9fb0bf;white-space:nowrap;}
+  .config-sep{width:1px;height:20px;background:rgba(255,255,255,.12);flex-shrink:0;}
+  .config-btn{
+    background:var(--brass);color:var(--ink);
+    border:none;border-radius:2px;
+    padding:7px 22px;
+    font-family:'Noto Serif KR',serif;font-weight:700;font-size:14px;
+    cursor:pointer;letter-spacing:.04em;
+    transition:background .15s,transform .1s;white-space:nowrap;
+  }
+  .config-btn:hover{background:#c9a052;}
+  .config-btn:active{transform:scale(.97);}
+  .config-toast{
+    margin-left:auto;font-size:12.5px;color:var(--brass);font-weight:700;
+    opacity:0;transition:opacity .35s;white-space:nowrap;
+  }
+  .config-toast.show{opacity:1;}
+  @media(max-width:600px){
+    .config-toast{margin-left:0;width:100%;order:10;}
+    .config-input{width:80px;}
+  }
+
   @media print{
     body{background:#fff;font-size:11pt;}
     .hero{background:#15293d!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -421,14 +475,36 @@
 </style>
 </head>
 <body>
+<!-- 설정 바 -->
+<div class="config-bar">
+  <div class="config-inner">
+    <span class="config-eyebrow">맞춤 설계</span>
+    <div class="config-sep"></div>
+    <div class="config-fields">
+      <div class="config-field">
+        <label class="config-flabel" for="inp-age">나이</label>
+        <input class="config-input" id="inp-age" type="number" min="30" max="75" value="55">
+        <span class="config-unit">세</span>
+      </div>
+      <div class="config-field">
+        <label class="config-flabel" for="inp-income">연소득</label>
+        <input class="config-input" id="inp-income" type="number" min="500" max="99999" value="7000" style="width:100px">
+        <span class="config-unit">만 원</span>
+      </div>
+    </div>
+    <button class="config-btn" onclick="recalculate()">조회</button>
+    <span class="config-toast" id="config-toast"></span>
+  </div>
+</div>
+
 <div class="wrap">
 
   <header class="masthead">
     <p class="eyebrow">Private Retirement Briefing · 2026</p>
     <h1>50대 중반을 위한<br><em>맞춤 노후 자산 설계</em> 브리핑</h1>
     <div class="subject-line">
-      <span><i class="dot"></i>대상 <b>50대 중반 (현재 사회활동 중)</b></span>
-      <span><i class="dot"></i>연소득 <b>총급여 7,000만 원 가정</b></span>
+      <span><i class="dot"></i>대상 <b id="dyn-target">50대 중반 (현재 사회활동 중)</b></span>
+      <span><i class="dot"></i>연소득 <b id="dyn-income-label">총급여 7,000만 원 가정</b></span>
       <span><i class="dot"></i>기준 <b>2026년 세법</b></span>
     </div>
   </header>
@@ -436,9 +512,9 @@
   <!-- HERO -->
   <div class="hero">
     <p class="label">당신의 경우 · 연간 절세 효과</p>
-    <p class="figure">118.8<small>만 원 / 년</small></p>
-    <p class="calc"><b>연금저축 600만 원 + IRP 300만 원 = 900만 원</b> 납입 시 &nbsp;·&nbsp; 900만 원 × <b>13.2%</b> = 118.8만 원 환급</p>
-    <p class="note">총급여 5,500만 원을 넘는 구간이라 공제율은 16.5%가 아닌 13.2%가 적용됩니다. 그래도 13.2%는 어떤 안전자산보다 확실한 '즉시 수익'입니다.</p>
+    <p class="figure" id="dyn-hero-figure">118.8<small>만 원 / 년</small></p>
+    <p class="calc" id="dyn-hero-calc"><b>연금저축 600만 원 + IRP 300만 원 = 900만 원</b> 납입 시 &nbsp;·&nbsp; 900만 원 × <b>13.2%</b> = 118.8만 원 환급</p>
+    <p class="note" id="dyn-hero-note">총급여 5,500만 원을 넘는 구간이라 공제율은 16.5%가 아닌 13.2%가 적용됩니다. 그래도 13.2%는 어떤 안전자산보다 확실한 '즉시 수익'입니다.</p>
   </div>
 
   <!-- 1 -->
@@ -490,15 +566,15 @@
           </tr>
           <tr>
             <td class="lead-cell">당신의 공제율</td>
-            <td class="num">13.2%</td>
-            <td class="num">13.2%</td>
+            <td class="num" id="dyn-rate-pension">13.2%</td>
+            <td class="num" id="dyn-rate-irp">13.2%</td>
             <td>—</td>
           </tr>
           <tr>
             <td class="lead-cell">수익 과세 혜택</td>
             <td>인출 시 연금소득세 3.3~5.5%</td>
             <td>인출 시 연금소득세 3.3~5.5%</td>
-            <td class="num">200만 원 비과세 + 초과분 9.9% 분리과세</td>
+            <td class="num" id="dyn-isa-exempt">200만 원 비과세 + 초과분 9.9% 분리과세</td>
           </tr>
           <tr>
             <td class="lead-cell">투자 제한</td>
@@ -521,24 +597,26 @@
         </tbody>
       </table>
     </div>
-    <div class="callout brass">
+    <div class="callout brass" id="dyn-callout02">
       <div class="ttl">소득 7,000만 원에서 달라지는 두 가지</div>
       세액공제율이 <strong>16.5% → 13.2%</strong>로 낮아지고(그래도 매우 유리), ISA는 '서민형' 자격(총급여 5,000만 원 이하)이 안 되어 <strong>일반형(비과세 200만 원)</strong>으로 가입합니다. 두 가지를 빼면 다른 혜택은 동일하게 받습니다.
     </div>
   </section>
 
   <!-- 3 -->
-  <section>
-    <div class="sec-head"><span class="sec-num">03</span><h2>왜 50대 중반이 가장 유리한 시기인가</h2></div>
-    <p class="lead">연금저축·IRP에는 두 가지 인출 조건이 있습니다. <em class="k">만 55세 이상</em>이고, <em class="k">가입 후 5년</em>이 지나야 연금으로 받을 수 있습니다.</p>
-    <p>20·30대가 이 계좌에 넣으면 자금이 수십 년 묶입니다. 하지만 50대 중반은 두 조건을 <strong>곧, 혹은 이미</strong> 충족합니다. 즉 넣은 돈이 오래 잠기지 않으면서도 세액공제(연 최대 118.8만 원)는 그대로 받는 — 평생에서 가장 효율 좋은 구간입니다.</p>
-    <div class="callout key">
-      <div class="ttl">계좌가 아직 없다면, 오늘 '5년 시계'부터 켜세요</div>
-      연금저축펀드 계좌가 없다면 단돈 1만 원이라도 넣어 계좌를 먼저 개설하는 게 이득입니다. 5년 요건의 카운트다운이 그 순간 시작되기 때문입니다. 본격 납입은 그 뒤에 늘려도 됩니다.
-    </div>
-    <div class="callout warn">
-      <div class="ttl">중도 해지는 손해를 넘어 '역효과'</div>
-      세액공제를 받은 원금과 그동안의 운용수익 전체에 <strong>기타소득세 16.5%</strong>가 부과됩니다. 받은 혜택을 토해내고 오히려 더 낼 수도 있습니다. <strong>연금계좌에는 노후까지 안 쓸 돈만</strong> 넣고, 비상금은 ISA나 예금에 따로 두세요.
+  <section id="sec03">
+    <div class="sec-head"><span class="sec-num">03</span><h2 id="dyn-sec03-title">왜 50대 중반이 가장 유리한 시기인가</h2></div>
+    <div id="dyn-sec03-body">
+      <p class="lead">연금저축·IRP에는 두 가지 인출 조건이 있습니다. <em class="k">만 55세 이상</em>이고, <em class="k">가입 후 5년</em>이 지나야 연금으로 받을 수 있습니다.</p>
+      <p>20·30대가 이 계좌에 넣으면 자금이 수십 년 묶입니다. 하지만 50대 중반은 두 조건을 <strong>곧, 혹은 이미</strong> 충족합니다. 즉 넣은 돈이 오래 잠기지 않으면서도 세액공제(연 최대 118.8만 원)는 그대로 받는 — 평생에서 가장 효율 좋은 구간입니다.</p>
+      <div class="callout key">
+        <div class="ttl">계좌가 아직 없다면, 오늘 '5년 시계'부터 켜세요</div>
+        연금저축펀드 계좌가 없다면 단돈 1만 원이라도 넣어 계좌를 먼저 개설하는 게 이득입니다. 5년 요건의 카운트다운이 그 순간 시작되기 때문입니다. 본격 납입은 그 뒤에 늘려도 됩니다.
+      </div>
+      <div class="callout warn">
+        <div class="ttl">중도 해지는 손해를 넘어 '역효과'</div>
+        세액공제를 받은 원금과 그동안의 운용수익 전체에 <strong>기타소득세 16.5%</strong>가 부과됩니다. 받은 혜택을 토해내고 오히려 더 낼 수도 있습니다. <strong>연금계좌에는 노후까지 안 쓸 돈만</strong> 넣고, 비상금은 ISA나 예금에 따로 두세요.
+      </div>
     </div>
   </section>
 
@@ -1448,6 +1526,161 @@
 </div>
 
 <script>
+  /* ===== 맞춤 재계산 ===== */
+  function recalculate() {
+    var age    = parseInt(document.getElementById('inp-age').value)    || 55;
+    var income = parseInt(document.getElementById('inp-income').value) || 7000;
+
+    if (age < 30 || age > 75)          { alert('나이를 30~75세 사이로 입력해 주세요.'); return; }
+    if (income < 500 || income > 99999){ alert('연소득을 500만 원 이상으로 입력해 주세요.'); return; }
+
+    /* ── 기본 계산 ── */
+    var rate      = income <= 5500 ? 16.5 : 13.2;
+    var savings9  = Math.round(900  * rate) / 100;   // 900만×rate
+    var savings6  = Math.round(600  * rate) / 100;
+    var savings3  = Math.round(300  * rate) / 100;
+    var isaType   = income <= 5000 ? '서민형' : '일반형';
+    var isaExempt = income <= 5000 ? 400 : 200;
+
+    /* ── 나이 관련 ── */
+    var birthYear    = 2026 - age;
+    var pensionAge   = birthYear >= 1969 ? 65
+                     : birthYear >= 1965 ? 64
+                     : birthYear >= 1961 ? 63
+                     : birthYear >= 1957 ? 62 : 61;
+    var yearsTo55    = Math.max(0, 55 - age);
+    var yearsToPension = Math.max(0, pensionAge - age);
+    var already55    = age >= 55;
+
+    var ageLabel = age < 45 ? '40대 초반'
+                 : age < 50 ? '40대 중후반'
+                 : age < 55 ? '50대 초반'
+                 : age < 58 ? '50대 중반'
+                 : age < 60 ? '50대 후반'
+                 : age < 65 ? '60대 초반' : '60대 중후반';
+
+    var incomeStr = income.toLocaleString() + '만 원';
+
+    /* ── Masthead ── */
+    document.getElementById('dyn-target').textContent       = ageLabel + ' (현재 사회활동 중)';
+    document.getElementById('dyn-income-label').textContent = '총급여 ' + incomeStr + ' 가정';
+
+    /* ── Hero ── */
+    document.getElementById('dyn-hero-figure').innerHTML =
+      savings9.toFixed(1) + '<small>만 원 / 년</small>';
+
+    document.getElementById('dyn-hero-calc').innerHTML =
+      '<b>연금저축 600만 원 + IRP 300만 원 = 900만 원</b> 납입 시 &nbsp;·&nbsp; 900만 원 × <b>'
+      + rate + '%</b> = ' + savings9.toFixed(1) + '만 원 환급';
+
+    document.getElementById('dyn-hero-note').textContent =
+      income <= 5500
+        ? '총급여 5,500만 원 이하 구간이므로 최고 공제율 ' + rate + '%가 적용됩니다. '
+          + savings9.toFixed(1) + '만 원은 어떤 안전자산보다 확실한 즉시 수익입니다.'
+        : '총급여 5,500만 원을 넘는 구간이라 공제율은 16.5%가 아닌 ' + rate + '%가 적용됩니다. '
+          + '그래도 ' + rate + '%는 어떤 안전자산보다 확실한 \'즉시 수익\'입니다.';
+
+    /* ── 표 공제율 셀 ── */
+    document.getElementById('dyn-rate-pension').textContent = rate + '%';
+    document.getElementById('dyn-rate-irp').textContent     = rate + '%';
+    document.getElementById('dyn-isa-exempt').textContent   =
+      isaExempt + '만 원 비과세 + 초과분 9.9% 분리과세';
+
+    /* ── 섹션 02 콜아웃 ── */
+    var c02 = document.getElementById('dyn-callout02');
+    if (income <= 5500) {
+      c02.innerHTML =
+        '<div class="ttl">소득 ' + incomeStr + ' 구간의 혜택</div>'
+        + '총급여 5,500만 원 이하이므로 세액공제율 <strong>' + rate + '%</strong>(최고 구간)가 적용됩니다. '
+        + (income <= 5000
+            ? 'ISA도 <strong>서민형(비과세 400만 원)</strong>으로 가입 가능해 혜택이 더 큽니다.'
+            : 'ISA는 총급여 5,000만 원 초과라 <strong>일반형(비과세 200만 원)</strong>으로 가입합니다.');
+    } else {
+      c02.innerHTML =
+        '<div class="ttl">소득 ' + incomeStr + ' 구간에서 달라지는 두 가지</div>'
+        + '세액공제율이 <strong>16.5% → ' + rate + '%</strong>로 낮아지고(그래도 매우 유리), '
+        + 'ISA는 \'서민형\' 자격(총급여 5,000만 원 이하)이 안 되어 <strong>일반형(비과세 200만 원)</strong>으로 가입합니다. '
+        + '두 가지를 빼면 다른 혜택은 동일하게 받습니다.';
+    }
+
+    /* ── 섹션 03 — 나이별 맞춤 텍스트 ── */
+    document.getElementById('dyn-sec03-title').textContent =
+      '왜 ' + ageLabel + '이 가장 유리한 시기인가';
+
+    var sec03Html = '';
+    if (already55) {
+      // 이미 55세 이상
+      sec03Html =
+        '<p class="lead">연금저축·IRP의 인출 조건은 <em class="k">만 55세 이상</em>이고 <em class="k">가입 후 5년</em>입니다. '
+        + '현재 ' + age + '세이므로 <strong>나이 조건은 이미 충족</strong>했습니다.</p>'
+        + '<p>지금 납입하면 세액공제(연 최대 ' + savings9.toFixed(1) + '만 원)를 즉시 받으면서, '
+        + '5년 가입 요건만 채우면 언제든 연금으로 수령할 수 있습니다. '
+        + '돈이 오래 묶이지 않으면서 세제 혜택은 온전히 누리는 — 가장 효율 좋은 구간입니다.</p>'
+        + '<div class="callout key"><div class="ttl">계좌가 아직 없다면, 오늘 \'5년 시계\'부터 켜세요</div>'
+        + '단돈 1만 원이라도 넣어 계좌를 개설하세요. 5년 카운트다운이 그 순간 시작됩니다. '
+        + (age >= 60 ? '60대이므로 <strong>5년 후 만 ' + (age+5) + '세</strong>부터 연금 수령 가능합니다.' : '')
+        + '</div>';
+    } else {
+      // 55세 미만
+      var eligYear = 2026 + yearsTo55;
+      sec03Html =
+        '<p class="lead">연금저축·IRP의 인출 조건은 <em class="k">만 55세 이상</em>이고 <em class="k">가입 후 5년</em>입니다. '
+        + '현재 ' + age + '세이므로 나이 조건까지 <strong>' + yearsTo55 + '년 남았습니다</strong>.</p>'
+        + '<p>지금 납입을 시작하면 5년 요건과 나이 조건이 맞물려 <strong>' + eligYear + '년경</strong>부터 연금 수령이 가능합니다. '
+        + '세액공제(연 최대 ' + savings9.toFixed(1) + '만 원)는 납입 즉시 적용되므로, '
+        + '지금부터 시작할수록 복리 운용 기간이 길어져 유리합니다.</p>'
+        + '<div class="callout key"><div class="ttl">오늘 \'5년 시계\'부터 켜세요</div>'
+        + '소액이라도 즉시 납입해 계좌를 개설하면 5년 카운트다운이 시작됩니다. '
+        + '나이 조건(' + yearsTo55 + '년 후)과 5년 요건이 <strong>동시에</strong> 충족되도록 지금 시작하는 게 최선입니다.</div>';
+    }
+    sec03Html +=
+      '<div class="callout warn"><div class="ttl">중도 해지는 손해를 넘어 \'역효과\'</div>'
+      + '세액공제를 받은 원금과 운용수익 전체에 <strong>기타소득세 16.5%</strong>가 부과됩니다. '
+      + '<strong>연금계좌에는 노후까지 안 쓸 돈만</strong> 넣고, 비상금은 ISA나 예금에 따로 두세요.</div>';
+    document.getElementById('dyn-sec03-body').innerHTML = sec03Html;
+
+    /* ── 국민연금 step01 상세 ── */
+    var step01Detail = document.querySelector('#step1 .step-detail');
+    if (step01Detail) {
+      var p5y  = yearsToPension > 0 ? yearsToPension + '년 후(' + (2026 + yearsToPension) + '년)' : '이미 개시 연령 도달';
+      var p5yDelay = '최대 5년 연기 → 월 수령액 <b>' + (100 + 36) + '% 수준</b>(36% 증액)';
+      step01Detail.querySelector('h3').textContent = '국민연금, 얼마나 받을 수 있나';
+      // 개시 연령 카드 업데이트
+      var dcards = step01Detail.querySelectorAll('.dcard');
+      if (dcards[2]) {
+        dcards[2].querySelector('.dval').textContent = '만 ' + pensionAge + '세 개시';
+        dcards[2].querySelector('.ddesc').textContent =
+          '현재 ' + age + '세 기준 개시까지 약 ' + yearsToPension + '년 남음 (' + (2026 + yearsToPension) + '년경). '
+          + '출생연도 ' + birthYear + '년 기준 적용.';
+      }
+      if (dcards[3]) {
+        dcards[3].querySelector('.ddesc').textContent =
+          '개시를 1년 늦출 때마다 7.2% 증액. 최대 5년 연기 시 36% 더 받음. '
+          + (yearsToPension > 5 ? '아직 ' + yearsToPension + '년 남아 천천히 검토해도 됩니다.' : '개시 시점이 가까우므로 지금 결정이 필요합니다.');
+      }
+    }
+
+    /* ── 페이지 타이틀 ── */
+    document.title = '노후 설계 브리핑 · ' + ageLabel + ' · 연소득 ' + incomeStr;
+
+    /* ── 리포트 메타 ── */
+    var rpMeta = document.querySelector('.rp-meta');
+    if (rpMeta) {
+      rpMeta.innerHTML =
+        '<span>기준일 <b>2026. 06. 15</b></span>'
+        + '<span class="rp-meta-dot"></span>'
+        + '<span>대상 <b>' + ageLabel + ' · 총급여 ' + incomeStr + '</b></span>'
+        + '<span class="rp-meta-dot"></span>'
+        + '<span>투자 성향 <b>중립형 (안정성장)</b></span>';
+    }
+
+    /* ── 토스트 ── */
+    var toast = document.getElementById('config-toast');
+    toast.textContent = '✓ ' + ageLabel + ' · ' + incomeStr + ' 기준으로 업데이트되었습니다';
+    toast.classList.add('show');
+    setTimeout(function(){ toast.classList.remove('show'); }, 3000);
+  }
+
   function switchReport(btn) {
     var target = btn.getAttribute('data-target');
     document.querySelectorAll('.rtab').forEach(function(t){t.classList.remove('active');});
