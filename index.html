@@ -1750,12 +1750,28 @@
         + '<span>투자 성향 <b>중립형 (안정성장)</b></span>';
     }
 
+    /* ── URL 파라미터 업데이트 (공유 가능) ── */
+    var newUrl = location.pathname + '?age=' + age + '&income=' + income;
+    history.replaceState(null, '', newUrl);
+
     /* ── 토스트 ── */
     var toast = document.getElementById('config-toast');
     toast.textContent = '✓ ' + ageLabel + ' · ' + incomeStr + ' 기준으로 업데이트되었습니다';
     toast.classList.add('show');
     setTimeout(function(){ toast.classList.remove('show'); }, 3000);
   }
+
+  /* ── 페이지 로드 시 URL 파라미터 자동 적용 ── */
+  (function() {
+    var params = new URLSearchParams(location.search);
+    var age    = parseInt(params.get('age'));
+    var income = parseInt(params.get('income'));
+    if (age && income) {
+      document.getElementById('inp-age').value    = age;
+      document.getElementById('inp-income').value = income;
+      recalculate();
+    }
+  })();
 
   function switchReport(btn) {
     var target = btn.getAttribute('data-target');
